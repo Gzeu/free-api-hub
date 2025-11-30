@@ -1,0 +1,128 @@
+version: '3.9'
+
+services:
+  # Apache APISIX Gateway (MIT License - 100% Free)
+  apisix:
+    image: apache/apisix:3.7.0-debian
+    container_name: apisix-gateway
+    restart: always
+    volumes:
+      - ./config/apisix/config.yaml:/usr/local/apisix/conf/config.yaml:ro
+      - ./logs/apisix:/usr/local/apisix/logs
+    ports:
+      - "9080:9080"   # HTTP
+      - "9443:9443"   # HTTPS
+      - "9091:9091"   # Admin API
+    networks:
+      - api-hub-network
+    depends_on:
+      - etcd
+      - dragonfly
+    environment:
+      - APISIX_STAND_ALONE=false
+
+  # etcd (Apache 2.0 License - Required for APISIX)
+  etcd:
+    image: bitnami/etcd:3.5.11
+    container_name: apisix-etcd
+    restart: always
+    environment:
+      - ALLOW_NONE_AUTHENTICATION=yes
+      - ETCD_ADVERTISE_CLIENT_URLS=http://etcd:2379
+    volumes:
+      - etcd-data:/bitnami/etcd
+    ports:
+      - "2379:2379"
+    networks:
+      - api-hub-network
+
+  # Dragonfly (BSL 1.1 - Free for self-hosting, Redis drop-in replacement)
+  dragonfly:
+    image: docker.dragonflydb.io/dragonflydb/dragonfly:v1.13.0
+    container_name: dragonfly-cache
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - dragonfly-data:/data
+    ulimits:
+      memlock: -1
+    networks:
+      - api-hub-network
+    command: |
+      dragonfly 
+      --logtostderr 
+      --maxmemory=2gb 
+      --cache_mode=true
+
+  # API Hub Core Service
+  api-hub:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: api-hub-core
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DRAGONFLY_URL=redis://dragonfly:6379
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - PORT=3000
+    volumes:
+      - ./config/apis.yaml:/app/config/apis.yaml:ro
+      - ./logs/app:/app/logs
+    networks:
+      - api-hub-network
+    depends_on:
+      - dragonfly
+
+  # Prometheus (Apache 2.0 - Free Monitoring)
+  prometheus:
+    image: prom/prometheus:v2.48.1
+    container_name: prometheus
+    restart: always
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    networks:
+      - api-hub-network
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+
+  # Grafana (AGPL 3.0 - Free Dashboards)
+  grafana:
+    image: grafana/grafana:10.2.3
+    container_name: grafana
+    restart: always
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+      - GF_INSTALL_PLUGINS=redis-datasource
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./config/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./config/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    networks:
+      - api-hub-network
+
+networks:
+  api-hub-network:
+    driver: bridge
+
+volumes:
+  etcd-data:
+    driver: local
+  dragonfly-data:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
