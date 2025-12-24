@@ -1,0 +1,160 @@
+# Free API Hub - Service Configuration
+# Define free APIs to proxy with caching, rate limiting, and health checks
+
+# Cryptocurrency APIs
+crypto:
+  endpoint: https://api.coingecko.com/api/v3
+  description: CoinGecko cryptocurrency prices and market data
+  rateLimit: 50
+  cacheTTL: 60
+  timeout: 5000
+  headers:
+    User-Agent: Free-API-Hub/2.0
+
+binance:
+  endpoint: https://api.binance.com/api/v3
+  description: Binance exchange data (no auth required for public endpoints)
+  rateLimit: 100
+  cacheTTL: 30
+  timeout: 3000
+
+# Weather APIs
+weather:
+  endpoint: https://wttr.in
+  description: Weather forecast (wttr.in - no API key required)
+  rateLimit: 30
+  cacheTTL: 600
+  timeout: 5000
+  headers:
+    User-Agent: Free-API-Hub/2.0
+
+# Developer Tools
+github:
+  endpoint: https://api.github.com
+  description: GitHub public API (no auth for public repos)
+  rateLimit: 60
+  cacheTTL: 300
+  timeout: 5000
+  headers:
+    Accept: application/vnd.github.v3+json
+    User-Agent: Free-API-Hub/2.0
+
+npm:
+  endpoint: https://registry.npmjs.org
+  description: NPM package registry
+  rateLimit: 100
+  cacheTTL: 600
+  timeout: 5000
+
+# Content APIs
+joke:
+  endpoint: https://official-joke-api.appspot.com
+  description: Random jokes API
+  rateLimit: 50
+  cacheTTL: 300
+  timeout: 3000
+
+quote:
+  endpoint: https://api.quotable.io
+  description: Random inspirational quotes
+  rateLimit: 50
+  cacheTTL: 300
+  timeout: 3000
+
+advice:
+  endpoint: https://api.adviceslip.com
+  description: Random advice
+  rateLimit: 30
+  cacheTTL: 300
+  timeout: 3000
+
+# News & Information
+news:
+  endpoint: https://newsapi.org/v2
+  description: News headlines (requires API key for full access)
+  rateLimit: 100
+  cacheTTL: 300
+  timeout: 5000
+
+hackernews:
+  endpoint: https://hacker-news.firebaseio.com/v0
+  description: Hacker News API
+  rateLimit: 100
+  cacheTTL: 180
+  timeout: 3000
+
+reddit:
+  endpoint: https://www.reddit.com
+  description: Reddit JSON API (append .json to subreddit URLs)
+  rateLimit: 60
+  cacheTTL: 300
+  timeout: 5000
+  headers:
+    User-Agent: Free-API-Hub/2.0
+
+# Utilities
+ip:
+  endpoint: https://ipapi.co
+  description: IP geolocation data
+  rateLimit: 30
+  cacheTTL: 3600
+  timeout: 3000
+
+uuid:
+  endpoint: https://www.uuidgenerator.net/api
+  description: UUID generator
+  rateLimit: 100
+  cacheTTL: 0
+  timeout: 2000
+
+qr:
+  endpoint: https://api.qrserver.com/v1
+  description: QR code generator
+  rateLimit: 50
+  cacheTTL: 3600
+  timeout: 5000
+
+# Data & Science
+catfacts:
+  endpoint: https://catfact.ninja
+  description: Random cat facts
+  rateLimit: 50
+  cacheTTL: 600
+  timeout: 3000
+
+dogapi:
+  endpoint: https://dog.ceo/api
+  description: Random dog images
+  rateLimit: 50
+  cacheTTL: 300
+  timeout: 3000
+
+useless:
+  endpoint: https://uselessfacts.jsph.pl
+  description: Random useless facts
+  rateLimit: 50
+  cacheTTL: 600
+  timeout: 3000
+
+# AI & ML
+huggingface:
+  endpoint: https://huggingface.co/api
+  description: Hugging Face model hub API
+  rateLimit: 30
+  cacheTTL: 600
+  timeout: 10000
+
+# Blockchain (for your gaming projects)
+etherscan:
+  endpoint: https://api.etherscan.io/api
+  description: Ethereum blockchain explorer API
+  rateLimit: 5
+  cacheTTL: 60
+  timeout: 5000
+
+bscscan:
+  endpoint: https://api.bscscan.com/api
+  description: BNB Chain blockchain explorer API
+  rateLimit: 5
+  cacheTTL: 60
+  timeout: 5000
