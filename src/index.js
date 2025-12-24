@@ -1,4 +1,5 @@
 const express = require('express');
+const http = require('http');
 const { createClient } = require('redis');
 const axios = require('axios');
 const yaml = require('yaml');
@@ -9,16 +10,19 @@ const winston = require('winston');
 const helmet = require('helmet');
 const compression = require('compression');
 const { swaggerUi, swaggerDocument, swaggerOptions } = require('./swagger');
-const { analyticsMiddleware } = require('./middleware/analytics');
+const { analyticsMiddleware, getAnalyticsSummary } = require('./middleware/analytics');
 const analyticsRoutes = require('./routes/analytics');
+const WebSocketServer = require('./websocket/server');
+const CacheStrategies = require('./cache/strategies');
 require('dotenv').config();
 
 const app = express();
+const server = http.createServer(app);
 const PORT = process.env.PORT || 3000;
 
 // Logger setup
 const logger = winston.createLogger({
-  level: 'info',
+  level: process.env.LOG_LEVEL || 'info',
   format: winston.format.combine(
     winston.format.timestamp(),
     winston.format.json()
@@ -36,18 +40,19 @@ app.use(helmet({
     directives: {
       ...helmet.contentSecurityPolicy.getDefaultDirectives(),
       "img-src": ["'self'", "data:", "validator.swagger.io"],
-      "script-src": ["'self'", "'unsafe-inline'"],
+      "script-src": ["'self'", "'unsafe-inline'", "cdn.jsdelivr.net"],
+      "connect-src": ["'self'", "ws:", "wss:"],
     },
   },
 }));
 app.use(compression());
 app.use(express.json());
-app.use(analyticsMiddleware); // Track all requests
+app.use(analyticsMiddleware);
 
-// Static files (for dashboard)
+// Static files
 app.use(express.static(path.join(__dirname, '../public')));
 
-// Swagger UI Documentation
+// Swagger UI
 app.use('/docs', swaggerUi.serve);
 app.get('/docs', swaggerUi.setup(swaggerDocument, swaggerOptions));
 
@@ -65,6 +70,12 @@ const redis = createClient({
 redis.on('error', err => logger.error('Redis Client Error', err));
 redis.on('connect', () => logger.info('Connected to Dragonfly cache'));
 
+// Initialize cache strategies
+let cacheStrategies;
+
+// WebSocket server
+let wsServer;
+
 // Load API configuration
 let yamlConfig = {};
 try {
@@ -75,11 +86,11 @@ try {
   process.exit(1);
 }
 
-// Gemini AI (Free tier: 60 requests/minute)
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// Gemini AI
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'demo');
 const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
 
-// Rate limiting with Dragonfly
+// Rate limiting
 async function rateLimit(service, userId) {
   const key = `rl:${service}:${userId}`;
   try {
@@ -90,11 +101,11 @@ async function rateLimit(service, userId) {
     return current > limit;
   } catch (error) {
     logger.error('Rate limit check failed:', error);
-    return false; // Fail open
+    return false;
   }
 }
 
-// Free uptime oracle - verifies API health
+// Uptime oracle
 async function verifyUptime(serviceUrl, checks = 3) {
   const results = await Promise.allSettled(
     Array(checks).fill(0).map(() => 
@@ -111,38 +122,60 @@ async function verifyUptime(serviceUrl, checks = 3) {
   const uptimePercent = (successful / checks) * 100;
   
   return {
-    up: uptimePercent >= 66, // 2/3 success = healthy
+    up: uptimePercent >= 66,
     uptimePercent,
     checks: results.length
   };
 }
 
-// Root endpoint - redirect to dashboard
+// Routes
 app.get('/', (req, res) => {
-  res.redirect('/dashboard.html');
+  res.redirect('/advanced-dashboard.html');
 });
 
-// Health check endpoint
 app.get('/health', async (req, res) => {
   const health = {
     status: 'healthy',
     timestamp: new Date().toISOString(),
     services: {
       dragonfly: await redis.ping().then(() => 'connected').catch(() => 'disconnected'),
+      websocket: wsServer ? 'active' : 'inactive',
       apis: Object.keys(yamlConfig).length
-    }
+    },
+    stats: wsServer ? wsServer.getStats() : null
   };
   res.json(health);
 });
 
-// API proxy with caching
+// WebSocket stats endpoint
+app.get('/ws/stats', (req, res) => {
+  if (!wsServer) {
+    return res.status(503).json({ error: 'WebSocket server not initialized' });
+  }
+  res.json({
+    stats: wsServer.getStats(),
+    clients: wsServer.getClients(),
+    rooms: wsServer.getRooms()
+  });
+});
+
+// Cache stats endpoint
+app.get('/cache/stats', async (req, res) => {
+  try {
+    const stats = await cacheStrategies.getStats();
+    res.json({ status: 'success', data: stats });
+  } catch (error) {
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+});
+
+// API proxy with advanced caching
 app.get('/api/:service/:action?', async (req, res) => {
   const { service, action } = req.params;
   const userId = req.ip;
   
   const api = yamlConfig[service];
   
-  // AI-powered 404 handling
   if (!api) {
     try {
       const prompt = `API service "${service}" not found. Available services: ${Object.keys(yamlConfig).join(', ')}. Suggest the most relevant alternative service and explain why in 1-2 sentences.`;
@@ -160,7 +193,6 @@ app.get('/api/:service/:action?', async (req, res) => {
     }
   }
   
-  // Rate limiting
   if (await rateLimit(service, userId)) {
     return res.status(429).json({ 
       error: 'Rate limit exceeded',
@@ -169,46 +201,31 @@ app.get('/api/:service/:action?', async (req, res) => {
     });
   }
   
-  // Cache check
   const cacheKey = `cache:${service}:${action || 'default'}:${JSON.stringify(req.query)}`;
-  try {
-    const cached = await redis.get(cacheKey);
-    if (cached) {
-      logger.info(`Cache HIT: ${cacheKey}`);
-      return res.json({ ...JSON.parse(cached), cached: true });
-    }
-  } catch (cacheError) {
-    logger.warn('Cache read failed:', cacheError);
-  }
   
-  // Uptime verification
-  const uptime = await verifyUptime(api.endpoint);
-  if (!uptime.up) {
-    return res.status(503).json({ 
-      error: 'Service temporarily unavailable',
-      uptime: uptime.uptimePercent + '%',
-      checks: uptime.checks
-    });
-  }
-  
-  // Proxy request
   try {
-    const targetUrl = `${api.endpoint}${action ? '/' + action : ''}`;
-    const response = await axios.get(targetUrl, {
-      params: req.query,
-      timeout: api.timeout || 5000,
-      headers: api.headers || {}
-    });
-    
-    // Cache response
-    const ttl = api.cacheTTL || 300;
-    await redis.setEx(cacheKey, ttl, JSON.stringify(response.data)).catch(err => 
-      logger.warn('Cache write failed:', err)
+    const result = await cacheStrategies.cacheAside(
+      cacheKey,
+      async () => {
+        const uptime = await verifyUptime(api.endpoint);
+        if (!uptime.up) {
+          throw new Error('Service temporarily unavailable');
+        }
+        
+        const targetUrl = `${api.endpoint}${action ? '/' + action : ''}`;
+        const response = await axios.get(targetUrl, {
+          params: req.query,
+          timeout: api.timeout || 5000,
+          headers: api.headers || {}
+        });
+        
+        logger.info(`Proxied: ${service}/${action} -> ${targetUrl}`);
+        return response.data;
+      },
+      api.cacheTTL || 300
     );
     
-    logger.info(`Proxied: ${service}/${action} -> ${targetUrl}`);
-    res.json({ ...response.data, cached: false });
-    
+    res.json(result);
   } catch (error) {
     logger.error(`Proxy error: ${service}/${action}`, error.message);
     res.status(502).json({ 
@@ -219,7 +236,7 @@ app.get('/api/:service/:action?', async (req, res) => {
   }
 });
 
-// Metrics endpoint for Prometheus
+// Metrics endpoint
 app.get('/metrics', async (req, res) => {
   try {
     const info = await redis.info();
@@ -234,11 +251,30 @@ app.get('/metrics', async (req, res) => {
 async function start() {
   try {
     await redis.connect();
-    app.listen(PORT, () => {
-      logger.info(`🚀 Free API Hub v2.0 running on port ${PORT}`);
-      logger.info(`📊 Dashboard: http://localhost:${PORT}/dashboard.html`);
+    
+    // Initialize cache strategies
+    cacheStrategies = new CacheStrategies(redis, logger);
+    logger.info('Cache strategies initialized');
+    
+    // Initialize WebSocket server
+    wsServer = new WebSocketServer(server);
+    logger.info('WebSocket server initialized on /ws');
+    
+    // Broadcast analytics updates via WebSocket
+    setInterval(() => {
+      const analytics = getAnalyticsSummary();
+      wsServer.publishToChannel('analytics', {
+        type: 'analytics_update',
+        data: analytics.overview
+      });
+    }, 2000);
+    
+    server.listen(PORT, () => {
+      logger.info(`🚀 Free API Hub v2.1 running on port ${PORT}`);
+      logger.info(`📊 Dashboard: http://localhost:${PORT}/advanced-dashboard.html`);
       logger.info(`📚 Swagger UI: http://localhost:${PORT}/docs`);
-      logger.info(`📈 Analytics API: http://localhost:${PORT}/analytics`);
+      logger.info(`📈 Analytics: http://localhost:${PORT}/analytics`);
+      logger.info(`⚡ WebSocket: ws://localhost:${PORT}/ws`);
       logger.info(`💚 Health: http://localhost:${PORT}/health`);
       logger.info(`🎯 API Proxy: http://localhost:${PORT}/api/:service/:action`);
     });
@@ -253,6 +289,10 @@ start();
 // Graceful shutdown
 process.on('SIGTERM', async () => {
   logger.info('SIGTERM received, shutting down gracefully');
+  if (wsServer) wsServer.close();
   await redis.quit();
-  process.exit(0);
+  server.close(() => {
+    logger.info('Server closed');
+    process.exit(0);
+  });
 });
