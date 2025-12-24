@@ -1,7 +1,7 @@
 {
   "name": "free-api-hub",
-  "version": "1.0.0",
-  "description": "100% Free & Open-Source API Gateway Hub",
+  "version": "2.0.0",
+  "description": "100% Free & Open-Source API Gateway Hub with Swagger UI",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
@@ -11,7 +11,16 @@
     "docker:down": "docker-compose down",
     "docker:logs": "docker-compose logs -f"
   },
-  "keywords": ["api-gateway", "apisix", "dragonfly", "redis", "free", "open-source"],
+  "keywords": [
+    "api-gateway",
+    "apisix",
+    "dragonfly",
+    "redis",
+    "swagger",
+    "openapi",
+    "free",
+    "open-source"
+  ],
   "author": "George Pricop",
   "license": "MIT",
   "dependencies": {
@@ -24,7 +33,8 @@
     "helmet": "^7.1.0",
     "compression": "^1.7.4",
     "express-rate-limit": "^7.1.5",
-    "dotenv": "^16.3.1"
+    "dotenv": "^16.3.1",
+    "swagger-ui-express": "^5.0.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.2",
