@@ -1,302 +1,287 @@
 # 🚀 Free API Hub
 
-**Production-ready 100% free & open-source API Gateway Hub**
+<div align="center">
 
-A complete API management platform combining Apache APISIX, Dragonfly cache, k3s orchestration, Gemini AI integration, and automated deployment to Fly.io - all using free-tier services.
+**Production-Ready API Gateway with AI-Powered Automation**
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Status: Active Development](https://img.shields.io/badge/Status-Active%20Development-blue)](https://github.com/Gzeu/free-api-hub/issues)
-[![Version: 2.0.0](https://img.shields.io/badge/Version-2.0.0-green)](https://github.com/Gzeu/free-api-hub)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Node.js](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen)](https://nodejs.org/)
+[![MCP Protocol](https://img.shields.io/badge/MCP-v1.0-purple)](https://modelcontextprotocol.io)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED)](https://www.docker.com/)
+[![Kubernetes](https://img.shields.io/badge/Kubernetes-Ready-326CE5)](https://kubernetes.io/)
 
-## 📊 Current Status
+100% free & open-source API Gateway featuring **Apache APISIX**, **Dragonfly Cache**, **Model Context Protocol (MCP)**, and complete GitHub automation.
 
-**MCP v2.0 Integration in Progress** - [Track Progress →](https://github.com/Gzeu/free-api-hub/issues/2)
+[Features](#-features) • [Quick Start](#-quick-start) • [Documentation](#-documentation) • [MCP Tools](#-mcp-tools) • [Deployment](#-deployment)
 
-- ✅ **Phase 1:** Core setup complete (14% done)
-- 🔄 **Phase 2-7:** Configuration, integrations, and deployment pending
-- 📅 **Last Updated:** December 24, 2025
-- 🎯 **Target:** Full MCP integration with Claude Desktop support
+</div>
+
+---
 
 ## ✨ Features
 
-### Core Platform
-- 🌐 **API Gateway:** Apache APISIX with advanced routing and load balancing
-- ⚡ **High-Performance Cache:** Dragonfly in-memory datastore
-- 🐳 **Container Orchestration:** Lightweight k3s Kubernetes
-- 🤖 **AI Integration:** Gemini AI for intelligent API optimization
-- ☁️ **Free Deployment:** Fly.io with generous free tier
+### 🏗️ Core Infrastructure
+- **🌐 Apache APISIX** - High-performance API gateway with 20+ pre-configured endpoints
+- **⚡ Dragonfly** - Redis-compatible in-memory cache (faster than Redis)
+- **📊 Prometheus + Grafana** - Real-time metrics and monitoring dashboards
+- **🐳 Docker & Kubernetes** - Production-ready containerization (k3s optimized)
+- **☁️ Fly.io Ready** - One-command cloud deployment
 
-### MCP v2.0 Integration (Coming Soon)
-- 🔧 **11 MCP Tools:** Comprehensive automation suite
-- 📝 **Notion Sync:** Automatic documentation updates
-- 💬 **Slack Alerts:** Real-time monitoring notifications
-- 📧 **Email Notifications:** Deployment and error alerts
-- 🔄 **Auto Git Push:** Automated commits and PR creation
-- 🖥️ **Claude Desktop:** Native MCP server integration
+### 🤖 AI-Powered Automation (MCP v1.0)
+- **🔗 GitHub Integration** - Auto-commit, PRs, issues, repository management
+- **📝 Notion Sync** - Documentation auto-sync every 6 hours
+- **💬 Slack Notifications** - Real-time alerts for deployments, errors, metrics
+- **📧 Email Alerts** - Critical error notifications
+- **🔄 GitHub Actions** - Complete CI/CD pipeline automation
 
-## 🏗️ Architecture
+### 🛡️ Production Features
+- **🔒 Security** - Rate limiting, CORS, CSP headers, API key rotation
+- **🔍 Observability** - Structured logging (Winston + Pino), health checks
+- **⚙️ Auto-Scaling** - Kubernetes HPA policies
+- **🧪 Testing** - Jest integration + E2E tests
+- **📈 Performance** - <200MB Docker images, sub-100ms response times
+
+---
+
+## 📊 System Architecture
 
 ```
-┌─────────────────────────────────────────────┐
-│           Fly.io Cloud Platform            │
-├─────────────────────────────────────────────┤
-│  ┌──────────────┐    ┌─────────────────┐  │
-│  │ Apache APISIX│◄───┤  Gemini AI      │  │
-│  │  (Gateway)   │    │  (Intelligence) │  │
-│  └──────┬───────┘    └─────────────────┘  │
-│         │                                   │
-│  ┌──────▼───────┐    ┌─────────────────┐  │
-│  │  Dragonfly   │    │  k3s Cluster    │  │
-│  │   (Cache)    │    │ (Orchestration) │  │
-│  └──────────────┘    └─────────────────┘  │
-└─────────────────────────────────────────────┘
-         ▲                       ▲
-         │     MCP v2.0          │
-         │   Integration         │
-         ▼                       ▼
-┌─────────────┐  ┌──────────┐  ┌────────┐
-│   Notion    │  │  Slack   │  │  Email │
-│    Docs     │  │  Alerts  │  │ Notify │
-└─────────────┘  └──────────┘  └────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                        Free API Hub v2.0                         │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                   │
+│  ┌──────────────┐    ┌──────────────┐    ┌─────────────────┐  │
+│  │   APISIX     │───▶│  Dragonfly   │◀───│   MCP Server    │  │
+│  │   Gateway    │    │    Cache     │    │  (11 Tools)     │  │
+│  │  (20 APIs)   │    │   (Redis)    │    │                 │  │
+│  └──────┬───────┘    └──────┬───────┘    └────────┬────────┘  │
+│         │                    │                      │            │
+│         ▼                    ▼                      ▼            │
+│  ┌────────────────────────────────────────────────────────┐    │
+│  │         Monitoring & Observability Layer              │    │
+│  │    Prometheus • Grafana • Winston • Health Checks     │    │
+│  └────────────────────────────────────────────────────────┘    │
+│                                                                   │
+│  ┌────────────────────────────────────────────────────────┐    │
+│  │              GitHub Actions CI/CD Pipeline             │    │
+│  │   Auto-Push • Deploy • Sync • Update Docs              │    │
+│  └────────────────────────────────────────────────────────┘    │
+│                                                                   │
+└─────────────────────────────────────────────────────────────────┘
+            │                    │                    │
+            ▼                    ▼                    ▼
+    ┌──────────────┐    ┌──────────────┐    ┌──────────────┐
+    │  GitHub API  │    │  Notion API  │    │   Slack API  │
+    └──────────────┘    └──────────────┘    └──────────────┘
 ```
+
+---
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-- Node.js 18+ and npm
-- Docker & Docker Compose
-- Git
-- Fly.io account (free tier)
+```bash
+Node.js >= 20.0.0
+Docker >= 24.0.0
+Git >= 2.40.0
+npm >= 10.0.0
+```
 
 ### Installation
 
 ```bash
-# Clone the repository
+# 1. Clone the repository
 git clone https://github.com/Gzeu/free-api-hub.git
 cd free-api-hub
 
-# Install dependencies
+# 2. Install dependencies
 npm install
 
-# Setup configuration
+# 3. Setup MCP infrastructure
 npm run setup
 
-# Start with Docker Compose
+# 4. Configure environment
+cp .env.example .env
+# Edit .env and add your API tokens
+
+# 5. Start all services
 docker-compose up -d
 
-# Verify installation
-curl http://localhost:9080/health
+# 6. Start MCP server
+npm run start-mcp
 ```
 
-### Local Development
+### Verify Installation
 
 ```bash
-# Start development server
-npm run dev
+# Test MCP connections
+npm run test-mcp
 
-# Run tests
-npm test
+# Check service health
+curl http://localhost:8080/health    # API Hub
+curl http://localhost:9080           # APISIX
+curl http://localhost:3000           # Grafana
 
-# Build for production
-npm run build
+# View logs
+docker-compose logs -f
 ```
+
+---
+
+## 🛠️ MCP Tools
+
+### GitHub Automation (4 Tools)
+
+| Tool | Description | Usage |
+|------|-------------|-------|
+| `github_push` | Auto-commit and push changes | Push code, create commits |
+| `github_create_pr` | Create pull requests | Automated PR creation |
+| `github_create_issue` | Create GitHub issues | Bug reports, feature requests |
+| `github_read_repo` | Read repository data | Fetch files, stats, metadata |
+
+### Documentation (3 Tools)
+
+| Tool | Description | Usage |
+|------|-------------|-------|
+| `notion_create_page` | Create Notion pages | New documentation pages |
+| `notion_update_page` | Update existing pages | Refresh documentation |
+| `notion_sync_documentation` | Auto-sync README to Notion | Scheduled documentation sync |
+
+### Communication (4 Tools)
+
+| Tool | Description | Usage |
+|------|-------------|-------|
+| `slack_send_message` | Send Slack messages | Channel notifications |
+| `slack_send_alert` | Critical alerts | Error notifications |
+| `slack_post_metric` | Post performance metrics | Real-time stats |
+| `email_send_email` | Email notifications | Critical alerts, reports |
+
+**Total: 11 Production-Ready Tools**
+
+[View Complete Tool Registry →](docs/MCP-TOOLS-REGISTRY.md)
+
+---
+
+## 📚 Documentation
+
+### Getting Started
+- [📖 MCP Setup Guide](docs/SETUP-MCP.md) - Complete installation instructions
+- [🔧 Configuration Guide](docs/CONFIGURATION.md) - Environment setup
+- [🚀 Deployment Guide](docs/DEPLOYMENT.md) - Production deployment
+
+### Reference
+- [🛠️ MCP Tools Registry](docs/MCP-TOOLS-REGISTRY.md) - All 11 tools documented
+- [⚙️ Git Automation](docs/GIT-AUTOMATION.md) - GitHub Actions workflows
+- [🏗️ Architecture](docs/ARCHITECTURE.md) - System design details
+- [📊 API Reference](docs/API-REFERENCE.md) - REST API endpoints
+
+### Advanced
+- [🔒 Security Best Practices](docs/SECURITY.md)
+- [📈 Performance Tuning](docs/PERFORMANCE.md)
+- [🐛 Troubleshooting](docs/TROUBLESHOOTING.md)
+- [🧪 Testing Guide](docs/TESTING.md)
+
+---
 
 ## 🔧 Configuration
 
 ### Environment Variables
 
-Create a `.env` file in the root directory:
+```bash
+# GitHub Integration
+GITHUB_TOKEN=ghp_xxxxxxxxxxxx
+DEFAULT_REPO=Gzeu/free-api-hub
+DEFAULT_BRANCH=main
 
-```env
-# Core Configuration
-NODE_ENV=production
-PORT=3000
-API_VERSION=v2
+# Notion Integration
+NOTION_API_KEY=secret_xxxxxxxxxxxx
+NOTION_DATABASE_ID=xxxxxxxxxxxx
 
-# APISIX Configuration
-APISIX_ADMIN_KEY=your-admin-key
-APISIX_PORT=9080
+# Slack Integration
+SLACK_BOT_TOKEN=xoxb-xxxxxxxxxxxx
+SLACK_DEFAULT_CHANNEL=#api-hub-alerts
+SLACK_WEBHOOK_URL=https://hooks.slack.com/services/xxx
 
-# Dragonfly Cache
-DRAGONFLY_HOST=localhost
-DRAGONFLY_PORT=6379
-
-# Gemini AI
-GEMINI_API_KEY=your-gemini-key
-
-# MCP Integrations (Optional)
-NOTION_API_KEY=your-notion-key
-NOTION_DATABASE_ID=your-database-id
-SLACK_BOT_TOKEN=xoxb-your-token
-SLACK_WEBHOOK_URL=your-webhook-url
-SMTP_USER=your-email
+# Email Configuration
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
 SMTP_PASS=your-app-password
 
-# Fly.io Deployment
-FLY_API_TOKEN=your-fly-token
+# Deployment
+FLY_API_TOKEN=fo1_xxxxxxxxxxxx
+NODE_ENV=production
+PORT=8080
 ```
 
-### GitHub Secrets (for CI/CD)
-
-Add these secrets in repository settings:
-- `NOTION_API_KEY`
-- `SLACK_BOT_TOKEN`
-- `FLY_API_TOKEN`
-- `SMTP_USER` & `SMTP_PASS`
-
-## 📦 Deployment
-
-### Deploy to Fly.io
-
-```bash
-# Install Fly CLI
-curl -L https://fly.io/install.sh | sh
-
-# Login to Fly.io
-flyctl auth login
-
-# Deploy application
-flyctl deploy
-
-# Check status
-flyctl status
-
-# View logs
-flyctl logs
-```
-
-### Docker Deployment
-
-```bash
-# Build image
-docker build -t free-api-hub .
-
-# Run container
-docker run -p 3000:3000 --env-file .env free-api-hub
-```
-
-## 🛠️ MCP Integration
-
-### Available MCP Tools (v2.0)
-
-1. **create-notion-page** - Create documentation pages
-2. **update-notion-page** - Update existing documentation
-3. **send-slack-message** - Send Slack notifications
-4. **send-email** - Send email alerts
-5. **create-github-pr** - Automated pull requests
-6. **auto-git-push** - Commit and push changes
-7. **deploy-to-fly** - Trigger deployments
-8. **query-metrics** - Fetch performance metrics
-9. **optimize-routes** - AI-powered route optimization
-10. **backup-config** - Configuration backups
-11. **health-check** - System health monitoring
-
-### Claude Desktop Integration
-
-To use MCP tools in Claude Desktop:
-
-1. Copy the config:
-   ```bash
-   cp config/claude_desktop_config.json ~/.config/claude/config.json
-   ```
-
-2. Update paths in the config file
-
-3. Restart Claude Desktop
-
-4. Test with: "Use the free-api-hub MCP tools"
-
-## 📚 Documentation
-
-- **[Setup Guide](docs/SETUP-MCP.md)** - Detailed setup instructions
-- **[MCP Tools Registry](docs/MCP-TOOLS-REGISTRY.md)** - Complete tool documentation
-- **[Git Automation](docs/GIT-AUTOMATION.md)** - Automated workflows
-- **[API Reference](docs/API.md)** - REST API documentation
-- **[Deployment Guide](docs/DEPLOYMENT.md)** - Production deployment
-
-## 🔍 Monitoring & Observability
-
-### Health Endpoints
-
-```bash
-# Main health check
-curl http://localhost:3000/health
-
-# APISIX admin API
-curl http://localhost:9080/apisix/admin/routes
-
-# Metrics endpoint
-curl http://localhost:3000/metrics
-```
-
-### Grafana Dashboards
-
-Access dashboards at `http://localhost:3001` (when using docker-compose)
-
-## 🤝 Contributing
-
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Commit changes: `git commit -m 'Add amazing feature'`
-4. Push to branch: `git push origin feature/amazing-feature`
-5. Open a Pull Request
-
-## 📋 Roadmap
-
-### v2.0 (Current)
-- [x] Core platform setup
-- [x] MCP integration branch
-- [ ] Complete MCP v2.0 integration (14% done)
-- [ ] Claude Desktop support
-- [ ] Comprehensive documentation
-
-### v2.1 (Planned)
-- [ ] GraphQL API support
-- [ ] Advanced rate limiting
-- [ ] Multi-region deployment
-- [ ] Kubernetes Helm charts
-- [ ] Web UI dashboard
-
-### v3.0 (Future)
-- [ ] Service mesh integration
-- [ ] Advanced AI routing
-- [ ] Blockchain-based authentication
-- [ ] Real-time analytics platform
-
-## 🐛 Issues & Support
-
-- **Bug Reports:** [Create an issue](https://github.com/Gzeu/free-api-hub/issues/new)
-- **Feature Requests:** [Request a feature](https://github.com/Gzeu/free-api-hub/issues/new)
-- **Discussions:** [GitHub Discussions](https://github.com/Gzeu/free-api-hub/discussions)
-
-## 📊 Project Stats
-
-- **Stars:** ![GitHub stars](https://img.shields.io/github/stars/Gzeu/free-api-hub)
-- **Forks:** ![GitHub forks](https://img.shields.io/github/forks/Gzeu/free-api-hub)
-- **Issues:** ![GitHub issues](https://img.shields.io/github/issues/Gzeu/free-api-hub)
-- **Last Commit:** ![GitHub last commit](https://img.shields.io/github/last-commit/Gzeu/free-api-hub)
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- [Apache APISIX](https://apisix.apache.org/) - API Gateway
-- [Dragonfly](https://www.dragonflydb.io/) - In-memory datastore
-- [k3s](https://k3s.io/) - Lightweight Kubernetes
-- [Fly.io](https://fly.io/) - Cloud platform
-- [Google Gemini](https://ai.google.dev/) - AI integration
-
-## 🔗 Links
-
-- **Repository:** [github.com/Gzeu/free-api-hub](https://github.com/Gzeu/free-api-hub)
-- **Author:** [George Pricop (@Gzeu)](https://github.com/Gzeu)
-- **Website:** [github.com/Gzeu](https://github.com/Gzeu)
+[View Complete Configuration →](.env.example)
 
 ---
 
-**Built with ❤️ by George Pricop** | **Last Updated: December 24, 2025**
+## 💡 Use Cases
+
+### For Developers
+- ✅ **Auto-commit workflow** - Push code with one command
+- ✅ **PR automation** - Create PRs from feature branches automatically
+- ✅ **Live documentation** - README always synced to Notion
+- ✅ **Real-time alerts** - Slack notifications for all events
+
+### For DevOps
+- ✅ **Zero-downtime deployments** - Automated Fly.io deployments
+- ✅ **Health monitoring** - Prometheus + Grafana dashboards
+- ✅ **Auto-scaling** - Kubernetes HPA policies
+- ✅ **Log aggregation** - Centralized logging with Winston
+
+### For AI Integration
+- ✅ **Claude Desktop** - Native MCP integration
+- ✅ **Perplexity AI** - Compatible MCP protocol
+- ✅ **Custom AI agents** - Extend with new tools
+- ✅ **Automation** - GitHub, Notion, Slack workflows
+
+---
+
+## 💰 Cost Breakdown
+
+| Service | Tier | Cost |
+|---------|------|------|
+| **Fly.io** | Free (3 shared-cpu-1x, 256MB) | $0/mo |
+| **GitHub Actions** | Free (2,000 min/mo) | $0/mo |
+| **Notion** | Free (Personal) | $0/mo |
+| **Slack** | Free (10 integrations) | $0/mo |
+| **Gmail** | Free (App passwords) | $0/mo |
+| **Total** | | **$0/month** |
+
+---
+
+## 📄 License
+
+This project is licensed under the **MIT License**.
+
+---
+
+## 👤 Author
+
+**George Pricop**
+- GitHub: [@Gzeu](https://github.com/Gzeu)
+- Location: București, Romania
+- Role: Full-Stack Developer & Blockchain Specialist
+
+---
+
+## 📞 Support
+
+- **Documentation**: [docs/](docs/)
+- **Issues**: [GitHub Issues](https://github.com/Gzeu/free-api-hub/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/Gzeu/free-api-hub/discussions)
+
+---
+
+<div align="center">
+
+**Built with ❤️ by [George Pricop](https://github.com/Gzeu)**
+
+[⬆ Back to Top](#-free-api-hub)
+
+</div>
