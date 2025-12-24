@@ -3,11 +3,14 @@ const { createClient } = require('redis');
 const axios = require('axios');
 const yaml = require('yaml');
 const fs = require('fs');
+const path = require('path');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const winston = require('winston');
 const helmet = require('helmet');
 const compression = require('compression');
 const { swaggerUi, swaggerDocument, swaggerOptions } = require('./swagger');
+const { analyticsMiddleware } = require('./middleware/analytics');
+const analyticsRoutes = require('./routes/analytics');
 require('dotenv').config();
 
 const app = express();
@@ -39,10 +42,17 @@ app.use(helmet({
 }));
 app.use(compression());
 app.use(express.json());
+app.use(analyticsMiddleware); // Track all requests
+
+// Static files (for dashboard)
+app.use(express.static(path.join(__dirname, '../public')));
 
 // Swagger UI Documentation
 app.use('/docs', swaggerUi.serve);
 app.get('/docs', swaggerUi.setup(swaggerDocument, swaggerOptions));
+
+// Analytics routes
+app.use('/analytics', analyticsRoutes);
 
 // Redis/Dragonfly client
 const redis = createClient({ 
@@ -107,9 +117,9 @@ async function verifyUptime(serviceUrl, checks = 3) {
   };
 }
 
-// Root endpoint - redirect to docs
+// Root endpoint - redirect to dashboard
 app.get('/', (req, res) => {
-  res.redirect('/docs');
+  res.redirect('/dashboard.html');
 });
 
 // Health check endpoint
@@ -225,9 +235,11 @@ async function start() {
   try {
     await redis.connect();
     app.listen(PORT, () => {
-      logger.info(`🚀 Free API Hub running on port ${PORT}`);
+      logger.info(`🚀 Free API Hub v2.0 running on port ${PORT}`);
+      logger.info(`📊 Dashboard: http://localhost:${PORT}/dashboard.html`);
       logger.info(`📚 Swagger UI: http://localhost:${PORT}/docs`);
-      logger.info(`📊 Health: http://localhost:${PORT}/health`);
+      logger.info(`📈 Analytics API: http://localhost:${PORT}/analytics`);
+      logger.info(`💚 Health: http://localhost:${PORT}/health`);
       logger.info(`🎯 API Proxy: http://localhost:${PORT}/api/:service/:action`);
     });
   } catch (error) {
