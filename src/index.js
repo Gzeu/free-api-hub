@@ -7,6 +7,7 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 const winston = require('winston');
 const helmet = require('helmet');
 const compression = require('compression');
+const { swaggerUi, swaggerDocument, swaggerOptions } = require('./swagger');
 require('dotenv').config();
 
 const app = express();
@@ -27,9 +28,21 @@ const logger = winston.createLogger({
 });
 
 // Middleware
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+      "img-src": ["'self'", "data:", "validator.swagger.io"],
+      "script-src": ["'self'", "'unsafe-inline'"],
+    },
+  },
+}));
 app.use(compression());
 app.use(express.json());
+
+// Swagger UI Documentation
+app.use('/docs', swaggerUi.serve);
+app.get('/docs', swaggerUi.setup(swaggerDocument, swaggerOptions));
 
 // Redis/Dragonfly client
 const redis = createClient({ 
@@ -93,6 +106,11 @@ async function verifyUptime(serviceUrl, checks = 3) {
     checks: results.length
   };
 }
+
+// Root endpoint - redirect to docs
+app.get('/', (req, res) => {
+  res.redirect('/docs');
+});
 
 // Health check endpoint
 app.get('/health', async (req, res) => {
@@ -208,6 +226,7 @@ async function start() {
     await redis.connect();
     app.listen(PORT, () => {
       logger.info(`🚀 Free API Hub running on port ${PORT}`);
+      logger.info(`📚 Swagger UI: http://localhost:${PORT}/docs`);
       logger.info(`📊 Health: http://localhost:${PORT}/health`);
       logger.info(`🎯 API Proxy: http://localhost:${PORT}/api/:service/:action`);
     });
